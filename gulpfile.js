@@ -133,7 +133,8 @@ function watch() {
 }
 
 // Задача билд
-const build = gulp.series(html, gulp.parallel(styles, scripts, img), watch);
+const build = gulp.series(html, gulp.parallel(styles, scripts, img));
+const dev = gulp.series(build, gulp.parallel(watch));
 
 exports.styles = styles;
 exports.scripts = scripts;
@@ -141,4 +142,5 @@ exports.img = img;
 exports.html = html;
 exports.watch = watch;
 exports.build = build;
-exports.default = build;
+exports.dev = dev;
+exports.default = dev;
