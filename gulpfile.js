@@ -3,12 +3,9 @@
 const gulp = require('gulp');
 const sass = require('gulp-sass')(require('sass'));
 const rename = require('gulp-rename');
-const cleanCSS = require('gulp-clean-css');
 const babel = require('gulp-babel');
-const uglify = require('gulp-uglify');
 const concat = require('gulp-concat');
 const sourcemaps = require('gulp-sourcemaps');
-const htmlmin = require('gulp-htmlmin');
 const newer = require('gulp-newer');
 const browsersync = require('browser-sync').create();
 const plumber = require('gulp-plumber');
@@ -39,13 +36,9 @@ function handleError(err) {
 }
 
 // Задача для минимализации HTML
-async function html() {
-    const size = (await import('gulp-size')).default;
-
+function html() {
     return gulp.src(path.html.src)
         .pipe(plumber({ errorHandler: handleError }))
-        .pipe(htmlmin({ collapseWhitespace: true }))
-        .pipe(size())
         .pipe(gulp.dest(path.html.dest))
         .pipe(browsersync.stream());
 }
@@ -53,39 +46,29 @@ async function html() {
 // Задача для обработки стилей
 async function styles() {
     const autoprefixer = await import('gulp-autoprefixer');
-    const size = (await import('gulp-size')).default;
 
     return gulp.src(path.styles.src)
         .pipe(plumber({ errorHandler: handleError }))
         .pipe(sass({ silent: true }).on('error', sass.logError))
+        .pipe(sourcemaps.init())
         .pipe(autoprefixer.default({
             cascade: false,
             overrideBrowserslist: ["> 0.5%", "last 3 versions"]
         }))
-        .pipe(cleanCSS({
-            level: 2
-        }))
-        .pipe(rename({
-            basename: 'main',
-            suffix: '.min'
-        }))
-        .pipe(size())
+        .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(path.styles.dest))
         .pipe(browsersync.stream());
 }
 
 // Задача для обработки скриптов
 async function scripts() {
-    const size = (await import('gulp-size')).default;
 
     return gulp.src(path.scripts.src, { sourcemaps: true })
         .pipe(plumber({ errorHandler: handleError }))
         .pipe(sourcemaps.init())
         .pipe(babel({ presets: ['@babel/env'] }))
-        .pipe(uglify().on('error', handleError))
-        .pipe(concat('main.min.js'))
+        .pipe(concat('main.js'))
         .pipe(sourcemaps.write('.'))
-        .pipe(size())
         .pipe(gulp.dest(path.scripts.dest))
         .pipe(browsersync.stream());
 }
@@ -98,7 +81,6 @@ async function img() {
     const webp = (await import('imagemin-webp')).default;
     const gifsicle = (await import('imagemin-gifsicle')).default;
     const svgo = (await import('imagemin-svgo')).default;
-    const size = (await import('gulp-size')).default;
 
     return gulp.src(path.images.src)
         .pipe(newer(path.images.dest))
@@ -114,7 +96,6 @@ async function img() {
                 ]
             })
         ]))
-        .pipe(size())
         .pipe(gulp.dest(path.images.dest));
 }
 
